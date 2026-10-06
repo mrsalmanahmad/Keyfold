@@ -49,11 +49,12 @@ Keyfold is a zero-knowledge team password manager that ships as a Chrome extensi
 - [x] Auto-lock
 - [ ] Encrypted offline cache — currently `chrome.storage.local` *is* the only copy (no Drive to cache against yet); revisit once Drive sync lands
 - [ ] Encrypted import (LastPass / Bitwarden / Chrome CSV)
-- [ ] In-field autofill icon, save/update prompt (content script is still just a placeholder)
+- [x] In-field autofill icon + save/update prompt — content script detects login forms, autofills on an exact registrable-domain match (via `tldts`), captures form submissions, and prompts to save a new login or update an existing one; "Generate password" also reachable from the field icon's menu. Verified end-to-end in a real Chrome instance against a live test page, including the update actually persisting
 - [ ] Full vault page (folders, bulk edit, sharing/member mgmt, import/export) — vault page is still a placeholder
 - [ ] Keyboard shortcuts
 - [ ] Light/dark theme (WCAG AA) — Tailwind `dark:` classes used throughout, not yet checked against WCAG AA contrast
 - [ ] Clipboard auto-clear that survives the popup closing (current version's timer dies with the popup — needs a `chrome.offscreen` document; see `src/popup/clipboard.ts`)
+- [ ] Autofill only catches native `<form>` submissions, not SPA logins that submit via fetch/XHR without a real form submit event — fine for the MVP, revisit once testing against the "20 popular login pages" list from the QA strategy surfaces real gaps
 
 ### Phase 4 — Release candidate (target Jan 3)
 - [ ] Security checklist passed
