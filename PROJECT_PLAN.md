@@ -35,22 +35,26 @@ Keyfold is a zero-knowledge team password manager that ships as a Chrome extensi
 - [x] Item encryption (AES-256-GCM, per-item nonce + AAD)
 - [x] Key fingerprint helper for out-of-band member verification
 - [x] Unit tests: round-trips + tamper tests (flipped signature byte, flipped ciphertext byte, wrong master key, revoked member's old key)
-- [ ] Wire the vault/crypto core into the background service worker's message handlers (currently library-only, not yet reachable from the popup UI)
-- [ ] Lock/unlock, encrypt/sync round-trip across two real browsers via Drive (blocked on the week-1 `drive.file` spike below)
+- [x] Wired into the background service worker: `account/*` and `item/*` message handlers, backed by real `chrome.storage.local` (persistent) + `chrome.storage.session` (unlocked keys only)
+- [x] Real idle auto-lock: `chrome.alarms` + a `lastActivity` timestamp in session state, not a stub
+- [ ] Lock/unlock, encrypt/sync round-trip across two real browsers via Drive (blocked on the week-1 `drive.file` spike below — what's wired today is local-only, single-user)
 
 ### Phase 3 — Feature complete (target Dec 20)
-- [ ] Sign in with Google (`chrome.identity`)
-- [ ] Personal vault + shared team vaults
-- [ ] Add/edit/search/copy/autofill logins
+- [ ] Sign in with Google (`chrome.identity`) — still blocked on an OAuth client ID
+- [x] Personal vault (local-only for now; "shared team vaults" still needs the Drive spike)
+- [x] Add/search/copy logins — popup: setup screen, unlock screen, search-first list, add form, copy-to-clipboard
+- [ ] Edit existing logins in the popup UI (service-layer `updateItemInVault` exists and is tested; no UI for it yet)
 - [ ] Password generator
-- [ ] Invite members, roles (Owner/Editor/Viewer)
-- [ ] Remove member + key rotation + re-encryption
-- [ ] Auto-lock, encrypted offline cache
+- [ ] Invite members, roles (Owner/Editor/Viewer) — `addMember`/role plumbing exists in the crypto core; no invite UI, and real sharing needs Drive
+- [x] Remove member + key rotation + re-encryption (crypto/service layer; no UI trigger yet since there's no one to remove in a local-only vault)
+- [x] Auto-lock
+- [ ] Encrypted offline cache — currently `chrome.storage.local` *is* the only copy (no Drive to cache against yet); revisit once Drive sync lands
 - [ ] Encrypted import (LastPass / Bitwarden / Chrome CSV)
-- [ ] In-field autofill icon, save/update prompt
-- [ ] Full vault page (folders, bulk edit, sharing/member mgmt, import/export)
+- [ ] In-field autofill icon, save/update prompt (content script is still just a placeholder)
+- [ ] Full vault page (folders, bulk edit, sharing/member mgmt, import/export) — vault page is still a placeholder
 - [ ] Keyboard shortcuts
-- [ ] Light/dark theme (WCAG AA)
+- [ ] Light/dark theme (WCAG AA) — Tailwind `dark:` classes used throughout, not yet checked against WCAG AA contrast
+- [ ] Clipboard auto-clear that survives the popup closing (current version's timer dies with the popup — needs a `chrome.offscreen` document; see `src/popup/clipboard.ts`)
 
 ### Phase 4 — Release candidate (target Jan 3)
 - [ ] Security checklist passed
