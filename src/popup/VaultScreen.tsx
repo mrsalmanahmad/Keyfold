@@ -73,13 +73,22 @@ export default function VaultScreen({ onLocked }: { onLocked: () => void }) {
     onLocked()
   }
 
+  function handleOpenFullVault() {
+    void chrome.tabs.create({ url: chrome.runtime.getURL('src/vault/index.html') })
+  }
+
   return (
     <div className="flex h-full w-full flex-col bg-white text-sm text-neutral-900 dark:bg-neutral-900 dark:text-neutral-100">
       <div className="flex items-center justify-between border-b border-neutral-200 p-3 dark:border-neutral-800">
         <span className="font-semibold">{vault?.name ?? 'Keyfold'}</span>
-        <button onClick={handleLock} className="text-xs text-neutral-500 underline">
-          Lock
-        </button>
+        <div className="flex items-center gap-3">
+          <button onClick={handleOpenFullVault} className="text-xs text-neutral-500 underline">
+            Open full vault
+          </button>
+          <button onClick={handleLock} className="text-xs text-neutral-500 underline">
+            Lock
+          </button>
+        </div>
       </div>
 
       <div className="p-3">
