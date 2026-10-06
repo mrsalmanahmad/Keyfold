@@ -24,7 +24,10 @@ Keyfold is a zero-knowledge team password manager that ships as a Chrome extensi
 - [x] Open-sourced: MIT license, CONTRIBUTING/CODE_OF_CONDUCT/SECURITY docs, issue/PR templates
 
 ### Phase 1 — Spike (Week 1) — go/no-go gate
-- [ ] `drive.file` + Google Picker spike: teammate can open a shared vault file via Picker
+- [ ] `drive.file` + Google Picker spike: a teammate picks the admin's **shared team folder**
+      once, and `drive.file` scope keeps working for files *other members* add to it later
+      (not just files this user personally created or picked) — see § Architecture for why
+      this one question replaced the old per-vault-file sharing design
 - [ ] Decision: `drive.file` scope viable, or need full `drive` scope + paid Google assessment
 - [ ] Threat model doc
 
@@ -44,7 +47,7 @@ Keyfold is a zero-knowledge team password manager that ships as a Chrome extensi
 - [x] Personal vault (local-only for now; "shared team vaults" still needs the Drive spike)
 - [x] Add/edit/search/copy logins — popup: setup screen, unlock screen, search-first list, add/edit form, copy-to-clipboard
 - [x] Password generator — random (length 8–64, A-Z/a-z/0-9/symbol toggles) and passphrase mode (3–10 words, optional number), wired into the item form
-- [ ] Invite members, roles (Owner/Editor/Viewer) — `addMember`/role plumbing exists in the crypto core; no invite UI, and real sharing needs Drive
+- [ ] Join-request + approval flow, roles (Owner/Editor/Viewer) — `addMember`/role plumbing exists in the crypto core; no join-request UI yet, and real sharing needs the shared team folder (Drive)
 - [x] Remove member + key rotation + re-encryption (crypto/service layer; no UI trigger yet since there's no one to remove in a local-only vault)
 - [x] Auto-lock
 - [ ] Encrypted offline cache — currently `chrome.storage.local` *is* the only copy (no Drive to cache against yet); revisit once Drive sync lands
@@ -108,7 +111,7 @@ The MVP must let a 5–50 person team store, autofill and share credentials end-
 - Sign in with Google; set a master password that never leaves the device
 - Personal vault plus shared team vaults (e.g. "QA Envs", "Prod Admin")
 - Add, edit, search, copy, and autofill logins; password generator
-- Invite members by email, roles: Owner, Editor, Viewer; remove member with key rotation
+- Join a team via a shared Drive folder link (admin-provisioned); roles: Owner, Editor, Viewer; remove member with key rotation
 - Auto-lock after idle time; encrypted offline cache
 - Encrypted import from LastPass / Bitwarden / Chrome CSV
 
@@ -132,14 +135,38 @@ Keyfold is a serverless MV3 extension: all crypto runs in the service worker, an
 Popup and content script never touch keys or Drive directly; they ask the service worker, which is the only part that decrypts, encrypts and syncs.
 
 ```
-┌─────────────┐      ┌──────────────┐      ┌───────────────────┐
-│   Popup UI   │◄────►│   Service    │◄────►│   Google Drive     │
-│ (React)      │ msg  │   Worker     │ API  │ (encrypted files    │
-├─────────────┤      │ (all crypto, │      │  only — vault =     │
-│ Content      │◄────►│  all Drive   │      │  1 file per vault) │
-│ Script       │ msg  │  access)     │      │                     │
-└─────────────┘      └──────────────┘      └───────────────────┘
+┌─────────────┐      ┌──────────────┐      ┌─────────────────────┐
+│   Popup UI   │◄────►│   Service    │◄────►│   Google Drive       │
+│ (React)      │ msg  │   Worker     │ API  │ one shared team      │
+├─────────────┤      │ (all crypto, │      │ folder: member        │
+│ Content      │◄────►│  all Drive   │      │ public keys + one    │
+│ Script       │ msg  │  access)     │      │ file per vault       │
+└─────────────┘      └──────────────┘      └─────────────────────┘
 ```
+
+**One shared team folder, not one share per vault.** An admin creates a single Drive folder
+(e.g. "Keyfold Team") and shares its link with edit access — posted in Slack, email,
+wherever — rather than adding each teammate's Google account individually through Drive's
+own sharing dialog. Every vault the team creates is just another file inside that one
+folder, and every member's public key is published there too (see § Key hierarchy).
+Joining is then one action per person: open the link, sign in with Google, and pick that
+folder once via the Google Picker — not a separate Drive share and a separate Picker pick
+for every vault.
+
+This still requires Google sign-in (`chrome.identity`) for every member — a Drive link,
+editable or not, only grants a permission; actually calling the Drive API to read or write
+still needs that member's own OAuth token. What the shared-folder model removes is the
+admin having to know and individually add each teammate's Google account ahead of time.
+
+The trade-off: "anyone with the link can edit" is weaker Drive-level access control than a
+named per-person share — a leaked link lets a stranger write or delete inside the folder.
+But Drive access was never what kept secrets safe here: everything in the folder is
+zero-knowledge encrypted, and *decrypt* access is controlled entirely by Keyfold's own
+owner-signed member list (§ Security and encryption model), not by who Drive lets touch the
+file. A leaked link mainly risks availability (someone deletes or corrupts the folder, which
+Drive's revision history and trash can recover from) — not confidentiality. For an extra
+layer, a Google Workspace admin can scope the link to "anyone in the organization" instead
+of the entire internet.
 
 ---
 
@@ -149,15 +176,31 @@ Everything is encrypted in the browser before it touches Drive; Google only ever
 
 **Key hierarchy**
 1. **Master password** → Argon2id (64 MB, 3 iterations, per-user salt) → *Master Key*. Never stored, never sent.
-2. **User keypair** (X25519 for encryption + Ed25519 for signing), generated on first run. Private keys are encrypted with the Master Key and saved in the user's own Drive; public keys are published to the team folder.
-3. **Vault Key** (random AES-256) per vault. For each member, the Vault Key is sealed to that member's public key and stored as a small "key slot" file in the vault folder.
+2. **User keypair** (X25519 for encryption + Ed25519 for signing), generated on first run. Both the public keys and the Master-Key-encrypted private keys are saved in the shared team folder (not scattered in the user's own Drive) — under `drive.file` scope, that one picked folder is the only place the app can reliably *find* them again on a new device or a reinstalled profile; public keys being visible there is fine, and the private key material stays ciphertext regardless of who else can see the folder.
+3. **Vault Key** (random AES-256) per vault. For each member, the Vault Key is sealed to that member's public key and stored as a small "key slot" file alongside that vault's file in the shared team folder.
 4. **Item encryption**: each credential is AES-256-GCM encrypted with the Vault Key, with a fresh 96-bit nonce and the item ID as associated data.
 
-**Sharing flow**: the Owner shares the vault's Drive folder with the teammate's Google account (for file access), then Keyfold seals the Vault Key to the teammate's public key (for decrypt access). Drive access alone reveals nothing.
+**Sharing flow**: Drive-level access to the team folder comes from the shared link, not a
+per-member grant — so holding the link is necessary but never sufficient to read anything.
+A new person who opens the link, signs in, and picks the folder via the Picker can write a
+"join request" there (their email, public keys, self-signed), but that alone grants no
+vault access. The vault Owner reviews the request, confirms the requester's key fingerprint
+out-of-band (Slack, in person, however), and explicitly approves them into a specific
+vault with a specific role — only that approval seals the Vault Key to their public key.
+Drive access and decrypt access are deliberately two separate gates.
 
-**Removing a member**: revoke the Drive share, generate a new Vault Key, re-encrypt items, re-seal for remaining members. Note: a removed member may have copied passwords already — the UI should prompt to rotate the actual passwords.
+**Removing a member**: generate a new Vault Key, re-encrypt items, re-seal for remaining
+members, re-sign the member list. This is purely a Keyfold-side operation — it doesn't (and
+can't cleanly) touch Drive's folder-level link permission, since that permission isn't
+per-person to begin with. The removed member keeps whatever Drive-level folder access the
+link still grants them, but with no sealed key slot left for them in any vault, that access
+only ever reaches ciphertext. Note: a removed member may have copied passwords already —
+the UI should prompt to rotate the actual passwords.
 
-**Key verification**: because a Drive editor could swap a public-key file, the vault Owner signs the member list, and each user's key fingerprint (a short word list) is shown for out-of-band confirmation on invite.
+**Key verification**: because anyone with the shared folder link could, in principle, write
+a forged "join request" or try to swap a public-key file, the vault Owner signs the member
+list, and each user's key fingerprint (a short word list) is shown for out-of-band
+confirmation before the Owner approves them — this is the real gate, not Drive's ACL.
 
 **In-browser hygiene**
 - Unlocked keys live only in `chrome.storage.session` (memory, cleared on browser close) plus auto-lock after 15 min idle (configurable)
@@ -184,7 +227,7 @@ The bar is LastPass-level polish: one click to unlock, one click to fill, nothin
 
 **First-run flow (target < 2 min):** Sign in with Google → create master password (strength meter) → Keyfold creates its Drive folder → optional import → done.
 
-**Team flow:** Create vault → "Invite" by email → teammate installs Keyfold, signs in, accepts → Owner confirms fingerprint → shared items appear.
+**Team flow:** Admin creates a shared Drive folder and shares the edit link once (Slack, email, wherever) → each teammate opens the link, installs Keyfold, signs in with Google, and picks that folder via the Picker (also just once — not per vault) → Keyfold publishes their public key as a join request in the folder → Owner sees the pending request, confirms the fingerprint out-of-band, approves them into a vault with a role → shared items appear for that member.
 
 ---
 
@@ -203,7 +246,7 @@ The bar is LastPass-level polish: one click to unlock, one click to fill, nothin
 | Testing | Vitest (unit), Playwright with the extension loaded (E2E) | Matches existing Playwright skills |
 | CI | GitHub Actions: lint, test, build, zip for Web Store | Repeatable releases |
 
-**`drive.file` caveat:** the app can only see files it created or files a user picks. So each vault is ONE Drive file (header with key slots and signed member list, plus encrypted items). A teammate accepting an invite picks that single file once in the Google Picker, and from then on Keyfold can read and write it. **Spike this in week 1 — it is the riskiest assumption in the plan.**
+**`drive.file` caveat:** the app can only see files it created or files a user picks — it does *not* automatically see every file a user could otherwise access in Drive. The open question for a **shared team folder** model: if a teammate picks that one folder via the Picker, does `drive.file` scope keep working for vault files *other members add to it later*, or only for files this specific user personally touched? If folder-level Picker selection cascades to later-added siblings, one Picker pick per person is all team sharing ever needs. If it doesn't cascade, each new vault file would need its own fresh Picker grant from every member — unworkable at team scale — forcing a move to the full `drive` scope (and the paid annual Google security assessment that comes with it). **Spike this in week 1 — it is the riskiest assumption in the plan**, and it's now a sharper, single yes/no question than it was under the old one-Drive-share-per-vault design.
 
 ---
 
@@ -211,7 +254,7 @@ The bar is LastPass-level polish: one click to unlock, one click to fill, nothin
 
 One developer full-time builds the MVP in 12 weeks; beta and Web Store review take it public about 14 weeks from start. Start date of Oct 12 is an assumption — shift the bars if it moves.
 
-- **Go / no-go (Oct 23):** teammate can open a shared vault file via Picker under `drive.file`; if not, decide on full `drive` scope + Google assessment
+- **Go / no-go (Oct 23):** a teammate picks the shared team folder once via Picker under `drive.file`, and still has access to vault files other members add to it afterward; if not, decide on full `drive` scope + Google assessment
 - **Crypto core done:** vault create, lock / unlock, encrypt / sync round-trip across two browsers
 - **Feature complete (Dec 20):** autofill, generator, sharing, roles, rotation on removal
 - **Release candidate (Jan 3):** security checklist passed, imports working, Web Store package submitted as unlisted
@@ -237,10 +280,11 @@ Crypto and sharing correctness gate every release; UI polish is tested, but a de
 
 | Risk | Impact | Mitigation |
 |---|---|---|
-| `drive.file` + Picker flow doesn't cover team sharing cleanly | Forces full `drive` scope and a paid annual Google security assessment | Week-1 spike; single-file-per-vault design |
+| `drive.file` + Picker folder-pick doesn't cascade to files added later by other members | Forces full `drive` scope and a paid annual Google security assessment | Week-1 spike; this is now the single question that decides it |
+| The shared folder link leaks (pasted somewhere public, phished, etc.) | A stranger can write/delete ciphertext in the folder — availability, not confidentiality | Zero-knowledge encryption + owner-signed member list mean Drive access alone decrypts nothing; Drive revision history/trash recovers deleted files; Workspace admins can scope the link to "anyone in the org" |
 | Concurrent edits overwrite each other | Lost passwords | Item-level merge on every write; keep Drive revisions as backup |
 | Users forget master password | Permanent data loss, support load | Clear warning at setup; team recovery key in v1.x |
-| Public-key substitution by a Drive editor | Attacker gains vault access | Owner-signed member list + fingerprint confirmation |
+| A forged join request or swapped public-key file | Attacker tries to gain vault access | Owner-signed member list + fingerprint confirmation before every approval — Drive-level folder access was never the gate |
 | Drive API quota / rate limits | Slow sync for big teams | Local encrypted cache, batch writes, exponential backoff |
 | Web Store review rejects the listing | Launch slips 1–2 weeks | Minimal permissions, clear privacy policy, no remote code |
 
