@@ -29,11 +29,14 @@ Keyfold is a zero-knowledge team password manager that ships as a Chrome extensi
 - [ ] Threat model doc
 
 ### Phase 2 — Crypto core
-- [ ] Master password → Argon2id → Master Key
-- [ ] User keypair (X25519 + Ed25519) generation, encrypted storage
-- [ ] Vault Key generation + per-member sealing ("key slots")
-- [ ] Item encryption (AES-256-GCM, per-item nonce + AAD)
-- [ ] Lock/unlock, encrypt/sync round-trip across two browsers (milestone gate)
+- [x] Master password → Argon2id → Master Key
+- [x] User keypair (X25519 + Ed25519) generation, encrypted storage (wrapped under the Master Key)
+- [x] Vault Key generation + per-member sealing ("key slots"); add/remove member with key rotation + re-encryption
+- [x] Item encryption (AES-256-GCM, per-item nonce + AAD)
+- [x] Key fingerprint helper for out-of-band member verification
+- [x] Unit tests: round-trips + tamper tests (flipped signature byte, flipped ciphertext byte, wrong master key, revoked member's old key)
+- [ ] Wire the vault/crypto core into the background service worker's message handlers (currently library-only, not yet reachable from the popup UI)
+- [ ] Lock/unlock, encrypt/sync round-trip across two real browsers via Drive (blocked on the week-1 `drive.file` spike below)
 
 ### Phase 3 — Feature complete (target Dec 20)
 - [ ] Sign in with Google (`chrome.identity`)
