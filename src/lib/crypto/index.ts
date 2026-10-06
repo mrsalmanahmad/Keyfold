@@ -1,3 +1,5 @@
 export * from './argon2'
 export * from './aes'
 export * from './keys'
+export * from './encoding'
+export * from './fingerprint'
