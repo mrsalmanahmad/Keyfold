@@ -198,21 +198,35 @@ export async function listItemsInVault(
 
 export type NewLoginItem = Omit<LoginItem, 'itemId' | 'updatedAt'>
 
+/** One read + one write for the whole batch — matters for imports, which can be hundreds of rows. */
+export async function addItemsToVault(
+  store: KeyValueStore,
+  vaultIdToAddTo: string,
+  openedVaultKey: Bytes,
+  newItems: NewLoginItem[],
+): Promise<LoginItem[]> {
+  const serialized = await store.get<SerializedVaultFile>(vaultKey(vaultIdToAddTo))
+  if (!serialized) throw new Error(`Vault ${vaultIdToAddTo} not found`)
+  const vaultFile = deserializeVaultFile(serialized)
+
+  const items: LoginItem[] = []
+  for (const newItem of newItems) {
+    const item: LoginItem = { ...newItem, itemId: crypto.randomUUID(), updatedAt: new Date().toISOString() }
+    vaultFile.items.push(await encryptLoginItem(openedVaultKey, item))
+    items.push(item)
+  }
+  await store.set(vaultKey(vaultIdToAddTo), serializeVaultFile(vaultFile))
+
+  return items
+}
+
 export async function addItemToVault(
   store: KeyValueStore,
   vaultIdToAddTo: string,
   openedVaultKey: Bytes,
   newItem: NewLoginItem,
 ): Promise<LoginItem> {
-  const serialized = await store.get<SerializedVaultFile>(vaultKey(vaultIdToAddTo))
-  if (!serialized) throw new Error(`Vault ${vaultIdToAddTo} not found`)
-  const vaultFile = deserializeVaultFile(serialized)
-
-  const item: LoginItem = { ...newItem, itemId: crypto.randomUUID(), updatedAt: new Date().toISOString() }
-  const encrypted = await encryptLoginItem(openedVaultKey, item)
-  vaultFile.items.push(encrypted)
-  await store.set(vaultKey(vaultIdToAddTo), serializeVaultFile(vaultFile))
-
+  const [item] = await addItemsToVault(store, vaultIdToAddTo, openedVaultKey, [newItem])
   return item
 }
 

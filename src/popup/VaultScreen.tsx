@@ -4,8 +4,9 @@ import type { NewLoginItem, VaultSummary } from '../lib/account/accountService'
 import { sendMessage } from './messaging'
 import { copyWithAutoClear } from './clipboard'
 import ItemForm from './ItemForm'
+import ImportScreen from './ImportScreen'
 
-type FormState = { mode: 'add' } | { mode: 'edit'; item: LoginItem } | null
+type FormState = { mode: 'add' } | { mode: 'edit'; item: LoginItem } | { mode: 'import' } | null
 
 export default function VaultScreen({ onLocked }: { onLocked: () => void }) {
   const [vault, setVault] = useState<VaultSummary | null>(null)
@@ -96,13 +97,31 @@ export default function VaultScreen({ onLocked }: { onLocked: () => void }) {
       {form?.mode === 'edit' && (
         <ItemForm item={form.item} onSubmit={(values) => handleUpdate(form.item, values)} onCancel={() => setForm(null)} />
       )}
+      {form?.mode === 'import' && vault && (
+        <ImportScreen
+          vaultId={vault.vaultId}
+          onDone={() => {
+            setForm(null)
+            void refreshItems(vault.vaultId)
+          }}
+          onCancel={() => setForm(null)}
+        />
+      )}
       {!form && (
-        <button
-          onClick={() => setForm({ mode: 'add' })}
-          className="mx-3 mb-2 rounded border border-dashed border-neutral-300 py-1.5 text-neutral-500 dark:border-neutral-700"
-        >
-          + Add login
-        </button>
+        <div className="mx-3 mb-2 flex gap-2">
+          <button
+            onClick={() => setForm({ mode: 'add' })}
+            className="flex-1 rounded border border-dashed border-neutral-300 py-1.5 text-neutral-500 dark:border-neutral-700"
+          >
+            + Add login
+          </button>
+          <button
+            onClick={() => setForm({ mode: 'import' })}
+            className="rounded border border-dashed border-neutral-300 px-3 py-1.5 text-neutral-500 dark:border-neutral-700"
+          >
+            Import
+          </button>
+        </div>
       )}
 
       <ul className="flex-1 overflow-y-auto">

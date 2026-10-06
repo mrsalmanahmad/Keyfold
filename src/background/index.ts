@@ -6,6 +6,7 @@
 import type { KeyfoldMessage, KeyfoldResponse, PendingSubmission } from '../lib/messages'
 import {
   addItemToVault,
+  addItemsToVault,
   deleteItemFromVault,
   hasAccount,
   listItemsInVault,
@@ -117,6 +118,13 @@ async function handleMessage(message: KeyfoldMessage, sender: chrome.runtime.Mes
       await openVault(localStore, message.vaultId, session)
       await deleteItemFromVault(localStore, message.vaultId, message.itemId)
       return undefined
+    }
+
+    case 'item/import': {
+      const session = await requireSession()
+      const opened = await openVault(localStore, message.vaultId, session)
+      const items = await addItemsToVault(localStore, message.vaultId, opened.vaultKey, message.items)
+      return { imported: items.length }
     }
 
     // Fires passively on every page load, so it deliberately doesn't touch requireSession()
