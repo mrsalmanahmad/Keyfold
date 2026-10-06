@@ -3,13 +3,15 @@ import type { LoginItem } from '../lib/types'
 import type { NewLoginItem, VaultSummary } from '../lib/account/accountService'
 import { sendMessage } from './messaging'
 import { copyWithAutoClear } from './clipboard'
-import AddItemForm from './AddItemForm'
+import ItemForm from './ItemForm'
+
+type FormState = { mode: 'add' } | { mode: 'edit'; item: LoginItem } | null
 
 export default function VaultScreen({ onLocked }: { onLocked: () => void }) {
   const [vault, setVault] = useState<VaultSummary | null>(null)
   const [items, setItems] = useState<LoginItem[]>([])
   const [query, setQuery] = useState('')
-  const [showAddForm, setShowAddForm] = useState(false)
+  const [form, setForm] = useState<FormState>(null)
   const [copiedItemId, setCopiedItemId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -43,7 +45,14 @@ export default function VaultScreen({ onLocked }: { onLocked: () => void }) {
     if (!vault) return
     await sendMessage({ type: 'item/add', vaultId: vault.vaultId, item })
     await refreshItems(vault.vaultId)
-    setShowAddForm(false)
+    setForm(null)
+  }
+
+  async function handleUpdate(existing: LoginItem, values: NewLoginItem) {
+    if (!vault) return
+    await sendMessage({ type: 'item/update', vaultId: vault.vaultId, item: { ...existing, ...values } })
+    await refreshItems(vault.vaultId)
+    setForm(null)
   }
 
   async function handleDelete(itemId: string) {
@@ -83,11 +92,13 @@ export default function VaultScreen({ onLocked }: { onLocked: () => void }) {
 
       {error && <p className="px-3 text-red-600 dark:text-red-400">{error}</p>}
 
-      {showAddForm ? (
-        <AddItemForm onSubmit={handleAdd} onCancel={() => setShowAddForm(false)} />
-      ) : (
+      {form?.mode === 'add' && <ItemForm onSubmit={handleAdd} onCancel={() => setForm(null)} />}
+      {form?.mode === 'edit' && (
+        <ItemForm item={form.item} onSubmit={(values) => handleUpdate(form.item, values)} onCancel={() => setForm(null)} />
+      )}
+      {!form && (
         <button
-          onClick={() => setShowAddForm(true)}
+          onClick={() => setForm({ mode: 'add' })}
           className="mx-3 mb-2 rounded border border-dashed border-neutral-300 py-1.5 text-neutral-500 dark:border-neutral-700"
         >
           + Add login
@@ -112,6 +123,9 @@ export default function VaultScreen({ onLocked }: { onLocked: () => void }) {
             <div className="flex shrink-0 gap-2">
               <button onClick={() => handleCopy(item)} className="text-xs text-neutral-500 underline">
                 {copiedItemId === item.itemId ? 'Copied' : 'Copy'}
+              </button>
+              <button onClick={() => setForm({ mode: 'edit', item })} className="text-xs text-neutral-500 underline">
+                Edit
               </button>
               <button onClick={() => handleDelete(item.itemId)} className="text-xs text-red-500 underline">
                 Delete

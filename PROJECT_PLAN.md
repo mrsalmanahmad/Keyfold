@@ -42,9 +42,8 @@ Keyfold is a zero-knowledge team password manager that ships as a Chrome extensi
 ### Phase 3 — Feature complete (target Dec 20)
 - [ ] Sign in with Google (`chrome.identity`) — still blocked on an OAuth client ID
 - [x] Personal vault (local-only for now; "shared team vaults" still needs the Drive spike)
-- [x] Add/search/copy logins — popup: setup screen, unlock screen, search-first list, add form, copy-to-clipboard
-- [ ] Edit existing logins in the popup UI (service-layer `updateItemInVault` exists and is tested; no UI for it yet)
-- [ ] Password generator
+- [x] Add/edit/search/copy logins — popup: setup screen, unlock screen, search-first list, add/edit form, copy-to-clipboard
+- [x] Password generator — random (length 8–64, A-Z/a-z/0-9/symbol toggles) and passphrase mode (3–10 words, optional number), wired into the item form
 - [ ] Invite members, roles (Owner/Editor/Viewer) — `addMember`/role plumbing exists in the crypto core; no invite UI, and real sharing needs Drive
 - [x] Remove member + key rotation + re-encryption (crypto/service layer; no UI trigger yet since there's no one to remove in a local-only vault)
 - [x] Auto-lock
