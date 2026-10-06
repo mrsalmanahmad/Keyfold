@@ -39,7 +39,10 @@ export default defineManifest({
     scopes: ['https://www.googleapis.com/auth/drive.file', 'openid', 'email'],
   },
   content_security_policy: {
-    extension_pages: "script-src 'self'; object-src 'self'",
+    // 'wasm-unsafe-eval' (not 'unsafe-eval') is required for the Argon2id (hash-wasm) and
+    // libsodium WebAssembly modules to compile at all under MV3's strict CSP — without it
+    // every WebAssembly.compile() call throws, which breaks master-key derivation entirely.
+    extension_pages: "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'",
   },
   web_accessible_resources: [
     {
