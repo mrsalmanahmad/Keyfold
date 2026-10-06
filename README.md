@@ -47,18 +47,36 @@ vs. still planned. If you're looking for something to work on, start there.
 git clone https://github.com/mrsalmanahmad/Keyfold.git
 cd Keyfold
 npm install
-```
-
-You'll need a Google OAuth client ID (Google Cloud Console → APIs & Services →
-Credentials → OAuth client ID → Chrome Extension, scope `drive.file`) dropped into
-`manifest.config.ts` (`oauth2.client_id`) before sign-in and Drive sync work locally.
-
-```bash
 npm run dev
 ```
 
 Then in Chrome: `chrome://extensions` → enable Developer mode → **Load unpacked** → select
-the `dist/` folder. CRXJS hot-reloads most changes.
+the `dist/` folder. CRXJS hot-reloads most changes. Sign-in and Drive sync aren't needed for
+local-only use (vault setup, add/edit/search/copy, autofill, import all work without them) —
+you only need the OAuth setup below once you're working on the Drive-backed sharing piece.
+
+### Setting up Google OAuth (for Drive sync / sign-in work)
+
+Chrome's "Chrome Extension" OAuth client type is keyed to a specific extension ID, so the
+repo pins one via a checked-in public key (`manifest.config.ts`'s `key` field) rather than
+relying on the random ID Chrome would otherwise assign per load location. **Keyfold's
+extension ID is fixed: `kmcciaekndgplklkjhhammpfciphjdfl`** — it'll be the same for you, on
+any machine, as long as `manifest.config.ts` is unchanged.
+
+1. In [Google Cloud Console](https://console.cloud.google.com), create or select a project.
+2. **APIs & Services → Library** → enable the **Google Drive API**.
+3. **APIs & Services → OAuth consent screen** → configure it (External user type is fine for
+   dev), add the `.../auth/drive.file` scope, and add your own Google account as a test user
+   (required while the app is in "Testing" publishing status).
+4. **APIs & Services → Credentials → Create Credentials → OAuth client ID**:
+   - Application type: **Chrome Extension**
+   - Extension ID: `kmcciaekndgplklkjhhammpfciphjdfl`
+5. Copy the generated client ID (`xxxx.apps.googleusercontent.com`) into
+   `manifest.config.ts`'s `oauth2.client_id`, replacing the placeholder.
+
+The matching private key lives only in your local, gitignored `.keys/extension-key.pem` —
+it isn't needed for any of this (Chrome and the Web Store only ever need the public half)
+and should never be committed.
 
 ### Test
 
