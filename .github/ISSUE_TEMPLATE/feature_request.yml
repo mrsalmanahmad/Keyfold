@@ -1,0 +1,39 @@
+name: Feature request
+description: Suggest an addition or change to Keyfold
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Check [PROJECT_PLAN.md](../../blob/main/PROJECT_PLAN.md) first — your idea might
+        already be scoped into v1.x or explicitly marked a non-goal, which saves everyone
+        a round-trip.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: Describe the gap or pain point, not just the feature.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: What you'd like to see happen. Sketches, mockups, or links welcome.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Other ways to solve the same problem, and why you didn't pick them.
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Where do you think this fits?
+      options:
+        - MVP (v1.0) — needed before first public launch
+        - v1.x — fine for after launch
+        - Not sure
+    validations:
+      required: true

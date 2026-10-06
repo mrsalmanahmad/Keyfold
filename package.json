@@ -3,6 +3,23 @@
   "version": "0.1.0",
   "private": true,
   "description": "Zero-knowledge team password manager — Chrome extension backed by Google Drive.",
+  "license": "MIT",
+  "author": "Salman Ahmad",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrsalmanahmad/Keyfold.git"
+  },
+  "bugs": {
+    "url": "https://github.com/mrsalmanahmad/Keyfold/issues"
+  },
+  "homepage": "https://github.com/mrsalmanahmad/Keyfold#readme",
+  "keywords": [
+    "password-manager",
+    "chrome-extension",
+    "end-to-end-encryption",
+    "google-drive",
+    "zero-knowledge"
+  ],
   "type": "module",
   "scripts": {
     "dev": "vite",

@@ -21,6 +21,7 @@ Keyfold is a zero-knowledge team password manager that ships as a Chrome extensi
 - [x] Crypto module skeleton (Argon2id / AES-GCM / X25519 wiring, no real key flows yet)
 - [x] Vitest + Playwright test harness configured
 - [x] GitHub Actions CI skeleton (lint, test, build, zip)
+- [x] Open-sourced: MIT license, CONTRIBUTING/CODE_OF_CONDUCT/SECURITY docs, issue/PR templates
 
 ### Phase 1 — Spike (Week 1) — go/no-go gate
 - [ ] `drive.file` + Google Picker spike: teammate can open a shared vault file via Picker
