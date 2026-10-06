@@ -24,6 +24,12 @@ Keyfold is a zero-knowledge team password manager that ships as a Chrome extensi
 - [x] Open-sourced: MIT license, CONTRIBUTING/CODE_OF_CONDUCT/SECURITY docs, issue/PR templates
 
 ### Phase 1 — Spike (Week 1) — go/no-go gate
+- [x] Stable extension ID pinned (`manifest.config.ts`'s `key` field; ID is
+      `kmcciaekndgplklkjhhammpfciphjdfl`) — a prerequisite for creating the Chrome Extension
+      OAuth client at all, since that client type is keyed to a specific extension ID. See
+      README § Setting up Google OAuth
+- [ ] Google Cloud project + OAuth consent screen + OAuth client ID (manual, in your Google
+      account — see README; `manifest.config.ts`'s `oauth2.client_id` still has the placeholder)
 - [ ] `drive.file` + Google Picker spike: a teammate picks the admin's **shared team folder**
       once, and `drive.file` scope keeps working for files *other members* add to it later
       (not just files this user personally created or picked) — see § Architecture for why
