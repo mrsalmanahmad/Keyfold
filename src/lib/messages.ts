@@ -12,6 +12,7 @@ export type KeyfoldMessage =
   | { type: 'item/add'; vaultId: string; item: NewLoginItem }
   | { type: 'item/update'; vaultId: string; item: LoginItem }
   | { type: 'item/delete'; vaultId: string; itemId: string }
+  | { type: 'item/import'; vaultId: string; items: NewLoginItem[] }
   | { type: 'autofill/matches'; origin: string }
   | { type: 'autofill/fill'; vaultId: string; itemId: string }
   | { type: 'autofill/record-submission'; origin: string; username: string; password: string }

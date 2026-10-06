@@ -48,7 +48,7 @@ Keyfold is a zero-knowledge team password manager that ships as a Chrome extensi
 - [x] Remove member + key rotation + re-encryption (crypto/service layer; no UI trigger yet since there's no one to remove in a local-only vault)
 - [x] Auto-lock
 - [ ] Encrypted offline cache — currently `chrome.storage.local` *is* the only copy (no Drive to cache against yet); revisit once Drive sync lands
-- [ ] Encrypted import (LastPass / Bitwarden / Chrome CSV)
+- [x] Encrypted import (LastPass / Bitwarden / Chrome CSV) — CSV parsing via `papaparse`, per-source column mapping, auto-detected source with manual override, preview before confirming, one batched `item/import` write (not N round-trips). Verified end-to-end in a real browser: upload → auto-detect → preview → import → items appear, fully encrypted
 - [x] In-field autofill icon + save/update prompt — content script detects login forms, autofills on an exact registrable-domain match (via `tldts`), captures form submissions, and prompts to save a new login or update an existing one; "Generate password" also reachable from the field icon's menu. Verified end-to-end in a real Chrome instance against a live test page, including the update actually persisting
 - [ ] Full vault page (folders, bulk edit, sharing/member mgmt, import/export) — vault page is still a placeholder
 - [ ] Keyboard shortcuts
