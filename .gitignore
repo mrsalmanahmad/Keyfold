@@ -1,6 +1,8 @@
 node_modules
 dist
 release
+# Private signing key for a stable extension ID — never commit this (see README § Setup).
+.keys/extension-key.pem
 .vite
 *.tsbuildinfo
 *.local

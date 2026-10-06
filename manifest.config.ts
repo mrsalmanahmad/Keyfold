@@ -1,8 +1,16 @@
 import { defineManifest } from '@crxjs/vite-plugin'
 import pkg from './package.json'
 
+// Pins the extension's ID so it stays the same across every unpacked reload and every
+// dev machine (Chrome otherwise derives a random ID per load location). This is the
+// PUBLIC half of a keypair — see README § Setup for how it was generated and why the
+// matching private key (.keys/extension-key.pem) must never be committed.
+const EXTENSION_PUBLIC_KEY =
+  'MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA1yP1zKRh87bUM+og4GhlUTHUQgePmqD6y+4Dk1V6a80dxoZ1QTmc3EdQjlMaWrQJ5IgOWeO80wW8Cn3mQCiC3lqTDz1CY2Wb1YjUN7gTw4H9NUUxWKI9Bp/vw7gGiTE2iau28+0HqOUo6+R3iqGeqsfHtLy0NSwTkIBxQs9X4cUzrqFV+G/Y1madvjS+6qCKKWkedbu41PUYY/WQ8oaX6srVNRlv6ek5p/xfNt6lOaaV4M+V5cGqzwTNjS5HHdGqXtJX1VBlFTBLsQGLiuWQmmTxGxMWlmn3h5UzWbVcJqhxWgILIyI3DtucaEj2ujpRkjlgrvBTSuD5M22LfmfPYQIDAQAB'
+
 export default defineManifest({
   manifest_version: 3,
+  key: EXTENSION_PUBLIC_KEY,
   name: 'Keyfold — Team Password Manager',
   description: 'End-to-end encrypted team password sharing, stored in your own Google Drive.',
   version: pkg.version,
