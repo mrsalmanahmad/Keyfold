@@ -7,6 +7,9 @@ export type KeyfoldMessage =
   | { type: 'account/setup'; email: string; masterPassword: string }
   | { type: 'account/unlock'; masterPassword: string }
   | { type: 'account/lock' }
+  | { type: 'google/status' }
+  | { type: 'google/sign-in' }
+  | { type: 'google/sign-out' }
   | { type: 'vault/list' }
   | { type: 'item/list'; vaultId: string }
   | { type: 'item/add'; vaultId: string; item: NewLoginItem }
@@ -23,6 +26,11 @@ export type KeyfoldMessage =
 export interface AccountStatus {
   accountExists: boolean
   unlocked: boolean
+}
+
+export interface GoogleStatus {
+  connected: boolean
+  email?: string
 }
 
 /** No password here — autofill/fill decrypts and returns the secret only once the user picks this entry. */

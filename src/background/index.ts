@@ -19,6 +19,7 @@ import {
   type UnlockedAccount,
 } from '../lib/account/accountService'
 import { localStore } from './chromeStore'
+import { getCachedGoogleAccount, signInWithGoogle, signOutOfGoogle } from './googleAuth'
 import { clearSession, loadSession, saveSession } from './sessionState'
 import { findExistingItemForSubmission, findMatchesForOrigin } from './autofillService'
 import { clearPendingSubmission, loadPendingSubmission, savePendingSubmission } from './pendingSubmissions'
@@ -85,6 +86,21 @@ async function handleMessage(message: KeyfoldMessage, sender: chrome.runtime.Mes
 
     case 'account/lock': {
       await clearSession()
+      return undefined
+    }
+
+    case 'google/status': {
+      const account = await getCachedGoogleAccount()
+      return { connected: Boolean(account), email: account?.email }
+    }
+
+    case 'google/sign-in': {
+      const account = await signInWithGoogle()
+      return { connected: true, email: account.email }
+    }
+
+    case 'google/sign-out': {
+      await signOutOfGoogle()
       return undefined
     }
 

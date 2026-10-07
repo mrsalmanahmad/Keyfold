@@ -4,6 +4,7 @@ import type { NewLoginItem, VaultSummary } from '../lib/account/accountService'
 import { exportItemsToCsv } from '../lib/import/exportCsv'
 import { sendMessage } from '../popup/messaging'
 import { copyWithAutoClear } from '../popup/clipboard'
+import GoogleConnection from '../popup/GoogleConnection'
 import ItemForm from '../popup/ItemForm'
 import ImportScreen from '../popup/ImportScreen'
 
@@ -149,6 +150,9 @@ export default function VaultPage({ onLocked }: { onLocked: () => void }) {
             </button>
           ))}
         </nav>
+        <div className="border-t border-neutral-200 p-3 dark:border-neutral-800">
+          <GoogleConnection />
+        </div>
         <button onClick={() => void handleLock()} className="border-t border-neutral-200 p-3 text-left text-neutral-500 dark:border-neutral-800">
           Lock
         </button>
