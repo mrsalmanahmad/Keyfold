@@ -43,15 +43,19 @@ Keyfold is a zero-knowledge team password manager that ships as a Chrome extensi
       **Live**: GitHub Pages is enabled for this repo, serving from the repo root on `main`
       (not `/docs` — that setting could be changed later, which would need
       `PICKER_PAGE_URL` in `src/lib/drivePicker.ts` updated to match), so the picker page is
-      reachable at `https://mrsalmanahmad.github.io/Keyfold/docs/picker.html`. Still open:
-      restricting the Picker API key in Cloud Console (HTTP referrer + Picker-API-only) now
-      that the URL is stable, and actually completing the picker handshake by hand
+      reachable at `https://mrsalmanahmad.github.io/Keyfold/docs/picker.html`. **Confirmed
+      working by hand**: real Google sign-in, then "Pick shared folder" opened the live
+      picker page and a real folder was selected successfully. Still open: restricting the
+      Picker API key in Cloud Console (HTTP referrer + Picker-API-only) now that the URL is
+      stable
 - [ ] `drive.file` + Google Picker spike: a teammate picks the admin's **shared team folder**
       once, and `drive.file` scope keeps working for files *other members* add to it later
       (not just files this user personally created or picked) — see § Architecture for why
-      this one question replaced the old per-vault-file sharing design. Tooling above makes
-      this testable now, but the test itself needs two real Google accounts and hasn't been
-      run yet
+      this one question replaced the old per-vault-file sharing design. One account can now
+      pick the folder and read/write it (confirmed above); the actual open question — does a
+      *second* member's independent pick of the same folder keep working for files the
+      *first* member adds afterward, without that second member re-picking — needs two real
+      Google accounts and hasn't been run yet
 - [ ] Decision: `drive.file` scope viable, or need full `drive` scope + paid Google assessment
 - [ ] Threat model doc
 
