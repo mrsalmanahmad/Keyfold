@@ -11,6 +11,12 @@ export type KeyfoldMessage =
   | { type: 'google/status' }
   | { type: 'google/sign-in' }
   | { type: 'google/sign-out' }
+  | { type: 'google/access-token' }
+  | { type: 'drive-spike/set-team-folder'; folder: { id: string; name: string } }
+  | { type: 'drive-spike/get-team-folder' }
+  | { type: 'drive-spike/forget-team-folder' }
+  | { type: 'drive-spike/list-team-folder-files' }
+  | { type: 'drive-spike/create-test-file' }
   | { type: 'vault/list' }
   | { type: 'item/list'; vaultId: string }
   | { type: 'item/add'; vaultId: string; item: NewLoginItem }

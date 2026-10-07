@@ -19,7 +19,14 @@ import {
   type UnlockedAccount,
 } from '../lib/account/accountService'
 import { localStore } from './chromeStore'
-import { getCachedGoogleAccount, signInWithGoogle, signOutOfGoogle } from './googleAuth'
+import {
+  createTestFileInTeamFolder,
+  forgetTeamFolder,
+  getTeamFolder,
+  listFilesInTeamFolder,
+  setTeamFolder,
+} from './driveFolderSpike'
+import { getCachedGoogleAccount, getGoogleAccessToken, signInWithGoogle, signOutOfGoogle } from './googleAuth'
 import { OFFSCREEN_TARGET, copyToClipboardWithAutoClear } from './offscreenClipboard'
 import { clearSession, loadSession, saveSession } from './sessionState'
 import { findExistingItemForSubmission, findMatchesForOrigin } from './autofillService'
@@ -115,6 +122,33 @@ async function handleMessage(message: KeyfoldMessage, sender: chrome.runtime.Mes
     case 'google/sign-out': {
       await signOutOfGoogle()
       return undefined
+    }
+
+    case 'google/access-token': {
+      return getGoogleAccessToken()
+    }
+
+    // Phase 1 go/no-go spike tooling — see src/background/driveFolderSpike.ts.
+    case 'drive-spike/set-team-folder': {
+      await setTeamFolder(message.folder)
+      return undefined
+    }
+
+    case 'drive-spike/get-team-folder': {
+      return getTeamFolder()
+    }
+
+    case 'drive-spike/forget-team-folder': {
+      await forgetTeamFolder()
+      return undefined
+    }
+
+    case 'drive-spike/list-team-folder-files': {
+      return listFilesInTeamFolder()
+    }
+
+    case 'drive-spike/create-test-file': {
+      return createTestFileInTeamFolder()
     }
 
     case 'vault/list': {

@@ -5,6 +5,7 @@ import { exportItemsToCsv } from '../lib/import/exportCsv'
 import { sendMessage } from '../popup/messaging'
 import { copyWithAutoClear } from '../popup/clipboard'
 import GoogleConnection from '../popup/GoogleConnection'
+import DriveFolderSpike from '../popup/DriveFolderSpike'
 import ItemForm from '../popup/ItemForm'
 import ImportScreen from '../popup/ImportScreen'
 
@@ -152,6 +153,9 @@ export default function VaultPage({ onLocked }: { onLocked: () => void }) {
         </nav>
         <div className="border-t border-neutral-200 p-3 dark:border-neutral-800">
           <GoogleConnection />
+        </div>
+        <div className="border-t border-neutral-200 p-3 dark:border-neutral-800">
+          <DriveFolderSpike />
         </div>
         <button onClick={() => void handleLock()} className="border-t border-neutral-200 p-3 text-left text-neutral-500 dark:border-neutral-800">
           Lock
