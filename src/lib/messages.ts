@@ -7,6 +7,7 @@ export type KeyfoldMessage =
   | { type: 'account/setup'; email: string; masterPassword: string }
   | { type: 'account/unlock'; masterPassword: string }
   | { type: 'account/lock' }
+  | { type: 'clipboard/copy'; value: string }
   | { type: 'google/status' }
   | { type: 'google/sign-in' }
   | { type: 'google/sign-out' }

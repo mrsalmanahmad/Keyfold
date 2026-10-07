@@ -16,6 +16,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         vault: 'src/vault/index.html',
+        offscreen: 'src/offscreen/index.html',
       },
     },
   },
