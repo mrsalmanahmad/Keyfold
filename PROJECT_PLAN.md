@@ -49,7 +49,7 @@ Keyfold is a zero-knowledge team password manager that ships as a Chrome extensi
 - [ ] Lock/unlock, encrypt/sync round-trip across two real browsers via Drive (blocked on the week-1 `drive.file` spike below — what's wired today is local-only, single-user)
 
 ### Phase 3 — Feature complete (target Dec 20)
-- [ ] Sign in with Google (`chrome.identity`) — still blocked on an OAuth client ID
+- [x] Sign in with Google (`chrome.identity`) — `src/background/googleAuth.ts` wraps `getAuthToken`/`removeCachedAuthToken`, looks up the signed-in account via Google's userinfo endpoint (more reliable than `getProfileUserInfo`, which reflects the browser's default profile account rather than whichever account was actually granted), and revokes server-side on disconnect so a fresh sign-in re-prompts consent. A "Connect Google Drive" control is wired into both the popup and the full vault page. Verified in a real Chrome instance: a fresh profile correctly reports "not connected" without prompting, and clicking connect correctly reaches Google's real sign-in page with no client-ID/extension-ID mismatch error — completing an actual login needs a human (Google blocks automated consent), so that final confirmation is still open. This does *not* yet touch Drive itself — `GoogleDriveAdapter` isn't wired to this token yet, and the `drive.file` cascading-access spike question is still open
 - [x] Personal vault (local-only for now; "shared team vaults" still needs the Drive spike)
 - [x] Add/edit/search/copy logins — popup: setup screen, unlock screen, search-first list, add/edit form, copy-to-clipboard
 - [x] Password generator — random (length 8–64, A-Z/a-z/0-9/symbol toggles) and passphrase mode (3–10 words, optional number), wired into the item form

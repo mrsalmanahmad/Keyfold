@@ -3,6 +3,7 @@ import type { LoginItem } from '../lib/types'
 import type { NewLoginItem, VaultSummary } from '../lib/account/accountService'
 import { sendMessage } from './messaging'
 import { copyWithAutoClear } from './clipboard'
+import GoogleConnection from './GoogleConnection'
 import ItemForm from './ItemForm'
 import ImportScreen from './ImportScreen'
 
@@ -89,6 +90,10 @@ export default function VaultScreen({ onLocked }: { onLocked: () => void }) {
             Lock
           </button>
         </div>
+      </div>
+
+      <div className="border-b border-neutral-200 px-3 py-2 dark:border-neutral-800">
+        <GoogleConnection />
       </div>
 
       <div className="p-3">

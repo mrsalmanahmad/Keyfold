@@ -19,6 +19,7 @@ import {
   type UnlockedAccount,
 } from '../lib/account/accountService'
 import { localStore } from './chromeStore'
+import { getCachedGoogleAccount, signInWithGoogle, signOutOfGoogle } from './googleAuth'
 import { OFFSCREEN_TARGET, copyToClipboardWithAutoClear } from './offscreenClipboard'
 import { clearSession, loadSession, saveSession } from './sessionState'
 import { findExistingItemForSubmission, findMatchesForOrigin } from './autofillService'
@@ -98,6 +99,21 @@ async function handleMessage(message: KeyfoldMessage, sender: chrome.runtime.Mes
     case 'clipboard/copy': {
       await requireSession()
       await copyToClipboardWithAutoClear(message.value)
+      return undefined
+    }
+
+    case 'google/status': {
+      const account = await getCachedGoogleAccount()
+      return { connected: Boolean(account), email: account?.email }
+    }
+
+    case 'google/sign-in': {
+      const account = await signInWithGoogle()
+      return { connected: true, email: account.email }
+    }
+
+    case 'google/sign-out': {
+      await signOutOfGoogle()
       return undefined
     }
 
