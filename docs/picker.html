@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Keyfold — Pick Drive folder</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        margin: 0;
+        color: #666;
+      }
+    </style>
+  </head>
+  <body>
+    <!--
+      Standalone static page, hosted outside the extension's chrome-extension:// origin
+      specifically so it can load Google's Picker library: Chrome's MV3 platform rules
+      forbid any page served from chrome-extension:// from ever loading a remote script,
+      with no exception, so the picker has to run somewhere else. See
+      src/lib/drivePicker.ts for the extension side of this handshake.
+
+      This page holds no secrets of its own — the opening extension window sends it a
+      short-lived Drive access token and the Picker API key over postMessage once this
+      page signals it's ready, never via the URL (keeps them out of browser history).
+    -->
+    <p id="status">Waiting for Keyfold…</p>
+    <script>
+      var openerOrigin = null
+
+      window.addEventListener('message', function (event) {
+        if (event.source !== window.opener) return
+        if (event.data && event.data.type === 'keyfold-picker-init') {
+          openerOrigin = event.origin
+          openPicker(event.data.token, event.data.apiKey)
+        }
+      })
+
+      function reportResult(folder) {
+        if (openerOrigin && window.opener) {
+          window.opener.postMessage({ type: 'keyfold-picker-result', folder: folder }, openerOrigin)
+        }
+        window.close()
+      }
+
+      function openPicker(token, apiKey) {
+        document.getElementById('status').textContent = 'Loading Google Picker…'
+        var script = document.createElement('script')
+        script.src = 'https://apis.google.com/js/api.js'
+        script.onload = function () {
+          gapi.load('picker', function () {
+            document.getElementById('status').textContent = 'Pick a folder…'
+            var view = new google.picker.DocsView(google.picker.ViewId.FOLDERS)
+              .setIncludeFolders(true)
+              .setSelectFolderEnabled(true)
+              .setMimeTypes('application/vnd.google-apps.folder')
+
+            new google.picker.PickerBuilder()
+              .addView(view)
+              .setOAuthToken(token)
+              .setDeveloperKey(apiKey)
+              .setCallback(function (data) {
+                if (data.action === google.picker.Action.PICKED) {
+                  var doc = data.docs && data.docs[0]
+                  reportResult(doc ? { id: doc.id, name: doc.name } : null)
+                } else if (data.action === google.picker.Action.CANCEL) {
+                  reportResult(null)
+                }
+              })
+              .build()
+              .setVisible(true)
+          })
+        }
+        script.onerror = function () {
+          document.getElementById('status').textContent = 'Failed to load Google Picker.'
+        }
+        document.head.appendChild(script)
+      }
+
+      // Tell the opener we're ready to receive the token. '*' is fine here — this message
+      // carries no secret, just a readiness signal, and the opener only ever sends the
+      // real token to the exact origin it expects this page to be served from (see
+      // PICKER_PAGE_ORIGIN in src/lib/drivePicker.ts).
+      if (window.opener) {
+        window.opener.postMessage({ type: 'keyfold-picker-ready' }, '*')
+      } else {
+        document.getElementById('status').textContent = 'This page must be opened by Keyfold.'
+      }
+    </script>
+  </body>
+</html>

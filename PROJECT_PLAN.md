@@ -28,12 +28,27 @@ Keyfold is a zero-knowledge team password manager that ships as a Chrome extensi
       `kmcciaekndgplklkjhhammpfciphjdfl`) — a prerequisite for creating the Chrome Extension
       OAuth client at all, since that client type is keyed to a specific extension ID. See
       README § Setting up Google OAuth
-- [ ] Google Cloud project + OAuth consent screen + OAuth client ID (manual, in your Google
-      account — see README; `manifest.config.ts`'s `oauth2.client_id` still has the placeholder)
+- [x] Google Cloud project + OAuth consent screen + OAuth client ID — real client ID is in
+      `manifest.config.ts`'s `oauth2.client_id`; sign-in verified working by hand
+- [x] Spike tooling to answer the question below: pick the shared team folder via Google's
+      Picker, then prove read/write access to it (`src/popup/DriveFolderSpike.tsx`, shown in
+      the full vault page). **Mid-build discovery that reshaped this:** Chrome's MV3 platform
+      CSP forbids any `chrome-extension://` page from ever loading a remote script — no
+      config can allow it — which blocks loading Google's Picker library (`apis.google.com/js/api.js`)
+      directly in the extension. Worked around the way Google's own Picker samples for
+      extensions do: `docs/picker.html`, a static page with no secrets baked in, hosted on
+      GitHub Pages (outside the extension's origin, so not subject to its CSP) that the
+      extension opens in a popup window and hands a short-lived access token + the Picker
+      API key over `postMessage` (never via the URL) — see `src/lib/drivePicker.ts`.
+      **Still needs**: GitHub Pages enabled for this repo (Settings → Pages → serve `/docs`
+      from `main`) before the picker page is actually reachable, and the Picker API key
+      restricted in Cloud Console (HTTP referrer + Picker-API-only) once that URL is live
 - [ ] `drive.file` + Google Picker spike: a teammate picks the admin's **shared team folder**
       once, and `drive.file` scope keeps working for files *other members* add to it later
       (not just files this user personally created or picked) — see § Architecture for why
-      this one question replaced the old per-vault-file sharing design
+      this one question replaced the old per-vault-file sharing design. Tooling above makes
+      this testable now, but the test itself needs two real Google accounts and hasn't been
+      run yet
 - [ ] Decision: `drive.file` scope viable, or need full `drive` scope + paid Google assessment
 - [ ] Threat model doc
 
