@@ -39,11 +39,11 @@ export default defineManifest({
     },
   ],
   chrome_url_overrides: undefined,
-  permissions: ['identity', 'storage', 'alarms', 'activeTab'],
+  permissions: ['identity', 'storage', 'alarms', 'activeTab', 'offscreen'],
   host_permissions: ['https://www.googleapis.com/*'],
   oauth2: {
     // Replace with a real OAuth client id from Google Cloud Console before first run.
-    client_id: 'REPLACE_WITH_GOOGLE_OAUTH_CLIENT_ID.apps.googleusercontent.com',
+    client_id: '803207539050-gkbv8qapplbid1k9et61j306a2q35ib4.apps.googleusercontent.com',
     scopes: ['https://www.googleapis.com/auth/drive.file', 'openid', 'email'],
   },
   content_security_policy: {
