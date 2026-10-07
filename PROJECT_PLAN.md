@@ -40,9 +40,12 @@ Keyfold is a zero-knowledge team password manager that ships as a Chrome extensi
       GitHub Pages (outside the extension's origin, so not subject to its CSP) that the
       extension opens in a popup window and hands a short-lived access token + the Picker
       API key over `postMessage` (never via the URL) — see `src/lib/drivePicker.ts`.
-      **Still needs**: GitHub Pages enabled for this repo (Settings → Pages → serve `/docs`
-      from `main`) before the picker page is actually reachable, and the Picker API key
-      restricted in Cloud Console (HTTP referrer + Picker-API-only) once that URL is live
+      **Live**: GitHub Pages is enabled for this repo, serving from the repo root on `main`
+      (not `/docs` — that setting could be changed later, which would need
+      `PICKER_PAGE_URL` in `src/lib/drivePicker.ts` updated to match), so the picker page is
+      reachable at `https://mrsalmanahmad.github.io/Keyfold/docs/picker.html`. Still open:
+      restricting the Picker API key in Cloud Console (HTTP referrer + Picker-API-only) now
+      that the URL is stable, and actually completing the picker handshake by hand
 - [ ] `drive.file` + Google Picker spike: a teammate picks the admin's **shared team folder**
       once, and `drive.file` scope keeps working for files *other members* add to it later
       (not just files this user personally created or picked) — see § Architecture for why
