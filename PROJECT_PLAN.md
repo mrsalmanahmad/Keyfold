@@ -82,7 +82,21 @@ Keyfold is a zero-knowledge team password manager that ships as a Chrome extensi
 - [x] Encrypted import (LastPass / Bitwarden / Chrome CSV) — CSV parsing via `papaparse`, per-source column mapping, auto-detected source with manual override, preview before confirming, one batched `item/import` write (not N round-trips). Verified end-to-end in a real browser: upload → auto-detect → preview → import → items appear, fully encrypted
 - [x] In-field autofill icon + save/update prompt — content script detects login forms, autofills on an exact registrable-domain match (via `tldts`), captures form submissions, and prompts to save a new login or update an existing one; "Generate password" also reachable from the field icon's menu. Verified end-to-end in a real Chrome instance against a live test page, including the update actually persisting
 - [x] Full vault page — opens as a real tab (`src/vault`, reachable via "Open full vault" in the popup), not the popup's 320px strip: vault sidebar, search, add/edit/delete, CSV export, CSV import, and multi-select bulk delete, all sharing the popup's existing crud/import components and background messaging. Verified end-to-end in a real Chrome instance: added an item from the popup, saw it appear in the full page, added/edited another from the full page, exported a CSV and confirmed its contents round-trip through the existing importer, then bulk-deleted via select-all and single-select. Folders and sharing/member management are deliberately out of scope here — folders need a data-model decision and member management is blocked on the Drive spike (see below)
-- [ ] Keyboard shortcuts
+- [x] Keyboard shortcuts — `Ctrl+Shift+K` opens the popup (Chrome's reserved `_execute_action`
+      command, handled natively, no code needed) and `Alt+Shift+L` fills the saved login for
+      the current page, if there's exactly one login form and exactly one saved match
+      (`manifest.config.ts`'s `commands`, `src/background/index.ts`'s `onCommand` listener,
+      `src/content/index.ts`'s handler). **The originally-planned `Ctrl+Shift+L` silently
+      failed to bind** — confirmed by hand that it's specifically that combination (not a
+      general "second command" issue: swapping only the key combo to `Alt+Shift+L` fixed it,
+      with everything else unchanged) — so this is the actual shortcut, not what § Features
+      and UX below still says. Verified in a real Chrome instance: `chrome.commands.getAll()`
+      shows both commands correctly bound, and triggering the same message the real
+      accelerator would send correctly filled a live test page's form. **Known test gap**:
+      Playwright/CDP's synthetic key events don't reach Chrome's accelerator table, so the
+      actual physical key combo firing `chrome.commands.onCommand` couldn't be verified by
+      automation — only that registration is correct and the message-handling + fill logic
+      behind it works; worth a quick hands-on check
 - [ ] Light/dark theme (WCAG AA) — Tailwind `dark:` classes used throughout, not yet checked against WCAG AA contrast
 - [x] Clipboard auto-clear that survives the popup closing — moved the write + delayed clear into a `chrome.offscreen` document (`src/offscreen`), which the background creates on demand and which keeps running after the popup/vault tab that triggered the copy closes. Offscreen documents are never focused, so the async Clipboard API throws there; uses the documented workaround (a hidden textarea + `execCommand('copy')`) instead — and since clearing with an empty string turned out to be a silent no-op on the system clipboard (verified by hand), the clear overwrites with a single space instead. Verified end-to-end in a real Chrome instance: copied a password, closed the popup that triggered the copy, and confirmed via a separate page the clipboard still held the password immediately after and was overwritten a few seconds later once the timer fired
 - [ ] Autofill only catches native `<form>` submissions, not SPA logins that submit via fetch/XHR without a real form submit event — fine for the MVP, revisit once testing against the "20 popular login pages" list from the QA strategy surfaces real gaps
@@ -250,7 +264,7 @@ The bar is LastPass-level polish: one click to unlock, one click to fill, nothin
 | Save / update prompt | After a login form submits, a slim bar offers "Save to… [vault]" or "Update password" |
 | Password generator | Length 8–64, symbols / digits toggles, passphrase mode; available in the popup and the field menu |
 | Full vault page | Opens in a tab: folders, bulk edit, sharing and member management, import / export |
-| Keyboard | Ctrl+Shift+L fill, Ctrl+Shift+K open popup; full keyboard navigation |
+| Keyboard | Alt+Shift+L fill, Ctrl+Shift+K open popup; full keyboard navigation |
 | Theme | Light / dark following the OS; accessible contrast (WCAG AA) |
 
 **First-run flow (target < 2 min):** Sign in with Google → create master password (strength meter) → Keyfold creates its Drive folder → optional import → done.

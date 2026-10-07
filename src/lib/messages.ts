@@ -56,3 +56,10 @@ export interface PendingSubmission {
 }
 
 export type KeyfoldResponse = { ok: true; data?: unknown } | { ok: false; error: string }
+
+/**
+ * A command (chrome.commands.onCommand, "fill-login") is background-initiated, not a
+ * request/response pair like KeyfoldMessage, so it's sent directly to the content script
+ * via chrome.tabs.sendMessage rather than through the account/* dispatcher above.
+ */
+export const KEYBOARD_FILL_MESSAGE_TYPE = 'keyfold/keyboard-fill' as const

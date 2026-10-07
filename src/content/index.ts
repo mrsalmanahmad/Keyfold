@@ -7,6 +7,7 @@
  * here — this script never decides whether a match is "close enough").
  */
 import type { AutofillMatch, PendingSubmission } from '../lib/messages'
+import { KEYBOARD_FILL_MESSAGE_TYPE } from '../lib/messages'
 import { sendMessage } from '../lib/sendMessage'
 import { detectLoginFields, setFieldValue } from './formDetection'
 import { attachFieldIcon } from './fieldIcon'
@@ -103,6 +104,29 @@ async function checkPendingSubmission(): Promise<void> {
     onDismiss: () => void sendMessage({ type: 'autofill/dismiss-submission' }).catch(() => undefined),
   })
 }
+
+/**
+ * Alt+Shift+L (see manifest.config.ts's "fill-login" command). Only acts when there's
+ * exactly one login form and exactly one saved match — anything more ambiguous and there's
+ * no keyboard-only way to ask the user which one they meant, so it silently does nothing
+ * rather than guess.
+ */
+async function handleKeyboardFill(): Promise<void> {
+  const detected = detectLoginFields()
+  if (detected.length !== 1) return
+  const matches = await getMatches()
+  if (matches.length !== 1) return
+  const { passwordField, usernameField } = detected[0]
+  await fillMatch(matches[0], passwordField, usernameField)
+}
+
+chrome.runtime.onMessage.addListener((message: unknown) => {
+  if (!message || typeof message !== 'object' || (message as { type?: unknown }).type !== KEYBOARD_FILL_MESSAGE_TYPE) {
+    return false
+  }
+  void handleKeyboardFill()
+  return false
+})
 
 scanAndAttachIcons()
 attachSubmitCapture()

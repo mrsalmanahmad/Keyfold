@@ -4,6 +4,7 @@
  * send it messages and never touch crypto or storage directly.
  */
 import type { KeyfoldMessage, KeyfoldResponse, PendingSubmission } from '../lib/messages'
+import { KEYBOARD_FILL_MESSAGE_TYPE } from '../lib/messages'
 import {
   addItemToVault,
   addItemsToVault,
@@ -42,6 +43,14 @@ chrome.runtime.onInstalled.addListener(() => {
 
 chrome.alarms.onAlarm.addListener((alarm) => {
   if (alarm.name === AUTO_LOCK_ALARM) void checkIdleAndLock()
+})
+
+// '_execute_action' (Ctrl+Shift+K, opens the popup) is handled natively by Chrome — only
+// our custom command needs a listener here.
+chrome.commands.onCommand.addListener((command, tab) => {
+  if (command === 'fill-login' && tab.id !== undefined) {
+    chrome.tabs.sendMessage(tab.id, { type: KEYBOARD_FILL_MESSAGE_TYPE }).catch(() => undefined)
+  }
 })
 
 async function checkIdleAndLock(): Promise<void> {

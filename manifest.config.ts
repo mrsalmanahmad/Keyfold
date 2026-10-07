@@ -39,6 +39,17 @@ export default defineManifest({
     },
   ],
   chrome_url_overrides: undefined,
+  commands: {
+    // Reserved name — Chrome handles this one natively (simulates clicking the toolbar
+    // icon), no onCommand listener needed.
+    _execute_action: {
+      suggested_key: { default: 'Ctrl+Shift+K' },
+    },
+    'fill-login': {
+      suggested_key: { default: 'Alt+Shift+L' },
+      description: 'Fill the saved login for this site',
+    },
+  },
   permissions: ['identity', 'storage', 'alarms', 'activeTab', 'offscreen'],
   host_permissions: ['https://www.googleapis.com/*'],
   oauth2: {
