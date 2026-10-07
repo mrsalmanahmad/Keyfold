@@ -8,7 +8,10 @@
  */
 import { GOOGLE_PICKER_API_KEY } from './googlePickerConfig'
 
-const PICKER_PAGE_URL = 'https://mrsalmanahmad.github.io/Keyfold/picker.html'
+// GitHub Pages for this repo is configured to serve from the repo root (not /docs), so the
+// live path keeps the /docs/ prefix — see PROJECT_PLAN.md § Build status tracker if that
+// Pages setting ever changes.
+const PICKER_PAGE_URL = 'https://mrsalmanahmad.github.io/Keyfold/docs/picker.html'
 const PICKER_PAGE_ORIGIN = new URL(PICKER_PAGE_URL).origin
 
 export interface PickedFolder {
