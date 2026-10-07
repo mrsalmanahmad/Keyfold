@@ -19,6 +19,7 @@ import {
   type UnlockedAccount,
 } from '../lib/account/accountService'
 import { localStore } from './chromeStore'
+import { OFFSCREEN_TARGET, copyToClipboardWithAutoClear } from './offscreenClipboard'
 import { clearSession, loadSession, saveSession } from './sessionState'
 import { findExistingItemForSubmission, findMatchesForOrigin } from './autofillService'
 import { clearPendingSubmission, loadPendingSubmission, savePendingSubmission } from './pendingSubmissions'
@@ -51,6 +52,12 @@ async function requireSession(): Promise<UnlockedAccount> {
 }
 
 chrome.runtime.onMessage.addListener((message: KeyfoldMessage, sender, sendResponse) => {
+  // Addressed to the offscreen clipboard document, not this dispatcher — let its own
+  // listener handle (and respond to) it.
+  if (message && typeof message === 'object' && 'target' in message && message.target === OFFSCREEN_TARGET) {
+    return false
+  }
+
   handleMessage(message, sender)
     .then((data) => sendResponse({ ok: true, data } satisfies KeyfoldResponse))
     .catch((err: unknown) =>
@@ -85,6 +92,12 @@ async function handleMessage(message: KeyfoldMessage, sender: chrome.runtime.Mes
 
     case 'account/lock': {
       await clearSession()
+      return undefined
+    }
+
+    case 'clipboard/copy': {
+      await requireSession()
+      await copyToClipboardWithAutoClear(message.value)
       return undefined
     }
 
